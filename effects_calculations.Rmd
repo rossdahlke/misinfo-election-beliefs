@@ -1,0 +1,678 @@
+---
+title: "Misinformation Exposure and the False Belief that Trump Won the 2020 U.S. Presidential Election"
+author: "Ross Dahlke"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  pdf_document
+abstract: ""
+bibliography: bibliography.bib
+csl: apa.csl
+biblio-style: apa
+code_folding: hide
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+options(scipen = 99999)
+library(tidyverse)
+library(grf)
+devtools::source_url("https://raw.githubusercontent.com/MatthieuStigler/Misconometrics/master/Gelbach_decompo/dec_covar.R")
+library(DoubleML)
+library(mlr3)
+lgr::get_logger("mlr3")$set_threshold("warn")
+library(oster)
+```
+
+# Data
+
+```{r}
+main_data <- read_csv("data/main_data.csv") %>% 
+    mutate(untrustworthy_n_total = untrustworthy_n_pre + untrustworthy_n_test,
+           untrustworthy_flag_total = if_else(untrustworthy_n_total > 0, 1, 0)) 
+```
+
+# Top-line difference
+
+```{r include=F}
+weights::wtd.t.test(
+  x = main_data %>% filter(untrustworthy_flag_test == 1) %>% pull(won_election_trump),
+  weight = main_data %>% filter(untrustworthy_flag_test == 1) %>% pull(weight))
+```
+
+```{r include=F}
+weights::wtd.t.test(
+  x = main_data %>% filter(untrustworthy_flag_test == 0) %>% pull(won_election_trump),
+  weight = main_data %>% filter(untrustworthy_flag_test == 0) %>% pull(weight))
+```
+
+```{r include=F}
+weights::wtd.t.test(
+  x = main_data %>% filter(untrustworthy_flag_test == 1) %>% pull(won_election_trump),
+  weight = main_data %>% filter(untrustworthy_flag_test == 1) %>% pull(weight),
+  y = main_data %>% filter(untrustworthy_flag_test == 0) %>% pull(won_election_trump),
+  weighty = main_data %>% filter(untrustworthy_flag_test == 0) %>% pull(weight))
+```
+
+```{r include = F}
+weights::wtd.t.test(
+  x = main_data %>%  pull(won_election_trump),
+  weight = main_data %>% pull(weight))
+```
+
+```{r include = T}
+weights::wtd.t.test(
+  x = main_data %>% filter(trump_support_pre == 1) %>%  pull(won_election_trump),
+  weight = main_data %>% filter(trump_support_pre == 1) %>% pull(weight))
+```
+
+# Exposure Descriptives
+
+```{r}
+t.test(main_data %>% filter(untrustworthy_n_test > 0) %>% pull(untrustworthy_n_test)) %>% 
+  broom::tidy()
+```
+
+
+# Gelbach Decomposition
+
+## Binary
+
+```{r echo = F}
+outcome <- "won_election_trump"
+lm1 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test"), collapse = " + "),
+        sep = " ~ "))
+binary_model1 <- lm(lm1, data = main_data, weights = main_data$weight)
+
+lm2 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "trump_support_pre"), collapse = " + "),
+        sep = " ~ "))
+binary_model2 <- lm(lm2, data = main_data, weights = main_data$weight)
+
+lm3 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre"), collapse = " + "),
+        sep = " ~ "))
+binary_model3 <- lm(lm3, data = main_data, weights = main_data$weight)
+
+lm4 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college"), collapse = " + "),
+        sep = " ~ "))
+binary_model4 <- lm(lm4, data = main_data, weights = main_data$weight)
+
+lm5 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female"), collapse = " + "),
+        sep = " ~ "))
+binary_model5 <- lm(lm5, data = main_data, weights = main_data$weight)
+
+lm6 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white"), collapse = " + "),
+        sep = " ~ "))
+binary_model6 <- lm(lm6, data = main_data, weights = main_data$weight)
+
+lm7 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge"), collapse = " + "),
+        sep = " ~ "))
+binary_model7 <- lm(lm7, data = main_data, weights = main_data$weight)
+
+lm8 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest"), collapse = " + "),
+        sep = " ~ "))
+binary_model8 <- lm(lm8, data = main_data, weights = main_data$weight)
+
+lm9 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65"), collapse = " + "),
+        sep = " ~ "))
+binary_model9 <- lm(lm9, data = main_data, weights = main_data$weight)
+
+lm10 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_flag_test", "total_n_pre", "trump_support_pre",  "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65", "untrustworthy_flag_pre"), collapse = " + "),
+        sep = " ~ "))
+binary_model10 <- lm(lm10, data = main_data, weights = main_data$weight)
+```
+
+```{r}
+save(binary_model1, file = "tables_and_figures/binary_model1")
+save(binary_model2, file = "tables_and_figures/binary_model2")
+save(binary_model3, file = "tables_and_figures/binary_model3")
+save(binary_model4, file = "tables_and_figures/binary_model4")
+save(binary_model5, file = "tables_and_figures/binary_model5")
+save(binary_model6, file = "tables_and_figures/binary_model6")
+save(binary_model7, file = "tables_and_figures/binary_model7")
+save(binary_model8, file = "tables_and_figures/binary_model8")
+save(binary_model9, file = "tables_and_figures/binary_model9")
+save(binary_model10, file = "tables_and_figures/binary_model10")
+```
+
+## Dosage
+
+```{r }
+outcome <- "won_election_trump"
+lm1 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test"), collapse = " + "),
+        sep = " ~ "))
+dosage_model1 <- lm(lm1, data = main_data, weights = main_data$weight)
+
+lm2 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "trump_support_pre"), collapse = " + "),
+        sep = " ~ "))
+dosage_model2 <- lm(lm2, data = main_data, weights = main_data$weight)
+
+lm3 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre"), collapse = " + "),
+        sep = " ~ "))
+dosage_model3 <- lm(lm3, data = main_data, weights = main_data$weight)
+
+lm4 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college"), collapse = " + "),
+        sep = " ~ "))
+dosage_model4 <- lm(lm4, data = main_data, weights = main_data$weight)
+
+lm5 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female"), collapse = " + "),
+        sep = " ~ "))
+dosage_model5 <- lm(lm5, data = main_data, weights = main_data$weight)
+
+lm6 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white"), collapse = " + "),
+        sep = " ~ "))
+dosage_model6 <- lm(lm6, data = main_data, weights = main_data$weight)
+
+lm7 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge"), collapse = " + "),
+        sep = " ~ "))
+dosage_model7 <- lm(lm7, data = main_data, weights = main_data$weight)
+
+lm8 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest"), collapse = " + "),
+        sep = " ~ "))
+dosage_model8 <- lm(lm8, data = main_data, weights = main_data$weight)
+
+lm9 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre","educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female","race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65"), collapse = " + "),
+        sep = " ~ "))
+dosage_model9 <- lm(lm9, data = main_data, weights = main_data$weight)
+
+lm10 <- as.formula(
+  paste(outcome,
+        paste(c("untrustworthy_n_test", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65", "untrustworthy_flag_pre"), collapse = " + "),
+        sep = " ~ "))
+dosage_model10 <- lm(lm10, data = main_data, weights = main_data$weight)
+```
+
+```{r}
+save(dosage_model1, file = "tables_and_figures/dosage_model1")
+save(dosage_model2, file = "tables_and_figures/dosage_model2")
+save(dosage_model3, file = "tables_and_figures/dosage_model3")
+save(dosage_model4, file = "tables_and_figures/dosage_model4")
+save(dosage_model5, file = "tables_and_figures/dosage_model5")
+save(dosage_model6, file = "tables_and_figures/dosage_model6")
+save(dosage_model7, file = "tables_and_figures/dosage_model7")
+save(dosage_model8, file = "tables_and_figures/dosage_model8")
+save(dosage_model9, file = "tables_and_figures/dosage_model9")
+save(dosage_model10, file = "tables_and_figures/dosage_model10")
+```
+
+# Double ML
+
+## Binary
+
+```{r}
+dml_data <- DoubleMLData$new(main_data %>% as.data.frame() %>% select(won_election_trump, untrustworthy_flag_test, untrustworthy_flag_pre, total_n_pre, trump_support_pre, educ4_college_grad, educ4_hs_or_less, educ4_postgrad, educ4_some_college, female, race4_black, race4_hispanic, race4_other, race4_white, knowledge, interest, age4_under_30, age4_30_44, age4_45_64, age4_65),
+                             y_col = "won_election_trump",
+                             d_cols = "untrustworthy_flag_test",
+                             x_cols = c("untrustworthy_flag_pre", "total_n_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_under_30",  "age4_30_44", "age4_45_64", "age4_65"))
+```
+
+```{r}
+learner <- lrn("regr.ranger", num.trees = 500, mtry = floor(sqrt(12)), max.depth = 5, min.node.size = 2)
+ml_g <- learner$clone()
+ml_m <- learner$clone()
+```
+
+```{r}
+obj_dml_plr <- DoubleMLPLR$new(dml_data, ml_g = ml_g, ml_m = ml_m)
+```
+
+```{r}
+obj_dml_plr$fit()
+obj_dml_plr
+```
+
+## Dosage
+
+```{r}
+dml_data <- DoubleMLData$new(main_data %>% as.data.frame() %>% select(won_election_trump, untrustworthy_n_test, untrustworthy_flag_pre, total_n_pre, trump_support_pre, college, female, non_white, knowledge, interest, age4_under_30, age4_30_44, age4_45_64, age4_65),
+                             y_col = "won_election_trump",
+                             d_cols = "untrustworthy_n_test",
+                             x_cols = c("untrustworthy_flag_pre", "trump_support_pre", "college", "female", "non_white", "knowledge", "interest", "age4_under_30", "age4_30_44", "age4_45_64", "age4_65"))
+```
+
+```{r}
+learner <- lrn("regr.ranger", num.trees = 500, mtry = floor(sqrt(12)), max.depth = 5, min.node.size = 2)
+ml_g <- learner$clone()
+ml_m <- learner$clone()
+```
+
+```{r}
+obj_dml_plr <- DoubleMLPLR$new(dml_data, ml_g = ml_g, ml_m = ml_m)
+```
+
+```{r}
+obj_dml_plr$fit()
+obj_dml_plr
+```
+
+# Causal Forest
+
+```{r }
+set.seed(1)
+X_binary <- main_data[, c("untrustworthy_flag_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_under_30", "age4_30_44", "age4_45_64", "age4_65")]
+Y_binary <- main_data$won_election_trump
+W_binary <- main_data$untrustworthy_flag_test
+```
+
+```{r }
+tau.forest_binary <- causal_forest(X_binary, Y_binary, W_binary, num.trees = 4000)
+tau.hat_binary <- predict(tau.forest_binary, X_binary, estimate.variance = TRUE)
+sigma.hat_binary <- sqrt(tau.hat_binary$variance.estimates)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, target.sample = "overlap")
+```
+
+```{r }
+main_data_predictions_binary <- main_data %>% 
+  cbind(tau.hat_binary)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, target.sample = "overlap", subset = main_data$trump_support == 1)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, target.sample = "overlap", subset = main_data$trump_support == 0)
+```
+
+```{r include = T}
+test_calibration(tau.forest_binary)
+```
+
+```{r echo = F, fig.cap = "Plot of estimated conditional average differences and 95% confidence interval of misinformation exposure on the belief that Donald Trump won the 2020 U.S. Presidential Election for each individual in our sample. Participants are ordered along the x-axis in order from lowest estimated conditional difference to the highest. The y-axis is the estimated conditional average difference."}
+# main_data_predictions %>% 
+#   mutate(rank = rank(predictions),
+#          predictions_low = predictions - 1.96 * sqrt(variance.estimates),
+#          predictions_high = predictions + 1.96 * sqrt(variance.estimates),
+#          trump_support_factor = if_else(trump_support_pre == 0, "Non-Trump Supporter", "Trump Supporter")) %>% 
+#   ggplot(aes(rank, predictions, ymin = predictions_low, ymax = predictions_high, color = trump_support_factor)) +
+#   geom_pointrange(alpha = .3) +
+#   geom_point() + 
+#   scale_color_manual(values = c("darkblue", "darkred")) +
+#   scale_y_continuous(labels = scales::percent_format()) +
+#   labs(title = "Conditional Average Treatment Difference of Misinformation Exposure on 
+# the Belief that Trump won the 2020 U.S. Presidential Election",
+# subtitle = "Point estimate & 95% Confidence Interval", 
+# x = "Conditional Average Treatment Difference Rank",
+# y = "Conditional Average Treatment Difference", 
+# color = "Trump Support") +
+#   theme_bw() +
+#   theme(legend.position = "bottom")
+```
+
+
+## Dosage
+
+```{r }
+X_dosage <- main_data[, c("untrustworthy_flag_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_under_30", "age4_30_44", "age4_45_64", "age4_65")]
+Y_dosage <- main_data$won_election_trump
+W_dosage <- main_data$untrustworthy_n_test
+```
+
+```{r }
+tau.forest_dosage <- causal_forest(X_dosage, Y_dosage, W_dosage, num.trees = 4000)
+tau.hat_dosage <- predict(tau.forest_dosage, X_dosage, estimate.variance = TRUE)
+sigma.hat_dosage <- sqrt(tau.hat_dosage$variance.estimates)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, target.sample = "overlap")
+```
+
+```{r }
+main_data_predictions_dosage <- main_data %>% 
+  cbind(tau.hat_dosage)
+```
+
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, target.sample = "overlap", subset = main_data$trump_support == 1)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, target.sample = "overlap", subset = main_data$trump_support == 0)
+```
+
+```{r include = T}
+test_calibration(tau.forest_dosage)
+```
+
+```{r echo = F, fig.cap = "Plot of estimated conditional average differences and 95% confidence interval of misinformation exposure on the belief that Donald Trump won the 2020 U.S. Presidential Election for each individual in our sample. Participants are ordered along the x-axis in order from lowest estimated conditional difference to the highest. The y-axis is the estimated conditional average difference.", fig.height = 8, fig.height = 8}
+main_data %>% 
+  cbind(tau.hat_binary %>% mutate(model = "A. Exposure")) %>% 
+  rbind(main_data %>% 
+          cbind(tau.hat_dosage) %>% mutate(model = "B. Dosage")) %>% 
+  group_by(model) %>% 
+  mutate(rank = rank(predictions),
+         predictions_low = predictions - 1.96 * sqrt(variance.estimates),
+         predictions_high = predictions + 1.96 * sqrt(variance.estimates),
+         trump_support_factor = if_else(trump_support_pre == 0, "Liberal", "Conservative"),
+         model = factor(model, levels = c("A. Exposure", "B. Dosage")),
+         trump_support_factor = factor(trump_support_factor, levels = c("Liberal", "Conservative"))) %>% 
+  ggplot(aes(rank, predictions, ymin = predictions_low, ymax = predictions_high, color = trump_support_factor)) +
+  geom_pointrange(alpha = .3) +
+  geom_point() + 
+  scale_color_manual(values = c("darkblue", "darkred")) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(title = "Conditional Average Treatment Effect of Misinformation Exposure on 
+the False Belief in a Fraudulent 2020 Election",
+subtitle = "Point estimate & 95% Confidence Interval", 
+x = "Rank of Conditional Average Treatment Effect for Each Participant 
+(lowest to highest)",
+y = "Participants' Conditional Average Treatment Effect
+on the False Belief that the Election was Fraudulent", 
+color = "") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  facet_wrap(.~model, ncol = 1, scales = "free")
+
+ggsave("tables_and_figures/cate_graph.pdf")
+```
+
+```{r echo = F, fig.cap = "Plot of estimated conditional average differences and 95% confidence interval of misinformation exposure on the belief that Donald Trump won the 2020 U.S. Presidential Election for each individual in our sample. Participants are ordered along the x-axis in order from lowest estimated conditional difference to the highest. The y-axis is the estimated conditional average difference."}
+main_data %>% 
+  cbind(tau.hat_binary %>% mutate(model = "A. Exposure")) %>% 
+  group_by(model) %>% 
+  mutate(rank = rank(predictions),
+         predictions_low = predictions - 1.96 * sqrt(variance.estimates),
+         predictions_high = predictions + 1.96 * sqrt(variance.estimates),
+         trump_support_factor = if_else(trump_support_pre == 0, "Liberal", "Conservative"),
+         model = factor(model, levels = c("A. Exposure", "B. Dosage")),
+         trump_support_factor = factor(trump_support_factor, levels = c("Liberal", "Conservative"))) %>% 
+  ggplot(aes(rank, predictions, ymin = predictions_low, ymax = predictions_high, color = trump_support_factor)) +
+  geom_pointrange(alpha = .3) +
+  geom_point() + 
+  scale_color_manual(values = c("darkblue", "darkred")) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(title = "Conditional Average Treatment Effect of Misinformation Exposure on 
+the False Belief in a Fraudulent 2020 Election",
+subtitle = "Point estimate & 95% Confidence Interval", 
+x = "Rank of Conditional Average Treatment Effect for Each Participant 
+(lowest to highest)",
+y = "Participants' Conditional Average Treatment Effect
+on the False Belief that the Election was Fraudulent", 
+color = "") +
+  theme_bw() +
+  theme(legend.position = "bottom") 
+
+ggsave("tables_and_figures/cate_graph_2.pdf")
+```
+
+```{r}
+main_data %>% 
+  cbind(tau.hat_dosage) %>% 
+  mutate(trump_support_factor = if_else(trump_support_pre == 0, "Liberal", "Conservative"),
+         trump_support_factor = factor(trump_support_factor, levels = c("Liberal", "Conservative")),
+         untrustworthy_n_test = untrustworthy_n_test + .1) %>% 
+  ggplot(aes(untrustworthy_n_test, predictions, color = trump_support_factor)) +
+  geom_point(alpha = .2) +
+  geom_smooth(method = "lm") +
+  scale_color_manual(values = c("darkblue", "darkred")) +
+  scale_x_log10(breaks = c(0, 1, 10, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(title = "Conditional Average Dosage Effect of Misinformation Exposure on 
+False Fraudulent Election Belief & # of Misinformation Exposures",
+subtitle = "Each point represents one person", 
+x = "Log # of Misinformation Website Exposure",
+y = "Participants' Conditional Average Dosage Effect
+on the False Belief that the Election was Fraudulent", 
+color = "") +
+  theme_bw() 
+
+ggsave("tables_and_figures/dosage_graph.pdf")
+```
+
+```{r, results='asis'}
+diminishing_effects_model1 <- main_data %>% 
+  cbind(tau.hat_dosage) %>% 
+  lm(predictions ~ untrustworthy_n_test * trump_support_pre, data = .) 
+
+diminishing_effects_model2 <- main_data %>% 
+  cbind(tau.hat_dosage) %>% 
+  lm(predictions ~ log(untrustworthy_n_test + .01) * trump_support_pre, data = .) 
+
+
+save(diminishing_effects_model1, file = "tables_and_figures/diminishing_effects_model1")
+save(diminishing_effects_model2, file = "tables_and_figures/diminishing_effects_model2")
+```
+
+```{r}
+main_data %>% 
+  cbind(w_hat_binary = tau.forest_binary$W.hat) %>% 
+  cbind(w_hat_dosage = tau.forest_dosage$W.hat) %>% 
+  pivot_longer(cols = c(w_hat_binary, w_hat_dosage)) %>% 
+  mutate(treated = if_else(untrustworthy_flag_test == 1, "treated", "untreated"),
+         name = if_else(name == "w_hat_binary", "Binary (estimated propensity to be treated)", "Dosage (estimated # of treatments)")) %>% 
+  ggplot(aes(value, fill = treated)) +
+  geom_histogram(bins = 50) + 
+  scale_fill_grey() +
+  theme_bw() +
+  theme(legend.position = "right") +
+  facet_wrap(.~name, scales = "free", ncol = 1) +
+  labs(title = latex2exp::TeX(r'(Distribution of \hat{W}s for binary exposure and dosage)'),
+       subtitle = "black = actually treated, grey = actually untreated",
+       x = latex2exp::TeX(r'(\hat{W})'),
+       y = "# of people") 
+
+ggsave("tables_and_figures/w_hat_distributions.pdf")
+```
+
+# Oster Omitted Variable Bias
+
+## Binary
+
+```{r}
+f01c <- won_election_trump ~ untrustworthy_flag_test + untrustworthy_flag_pre + total_n_pre + trump_support_pre + college + female + non_white + knowledge + interest + age4_under_30 + age4_30_44 + age4_45_64 + age4_65
+
+f01u <- won_election_trump ~ untrustworthy_flag_test 
+
+fit01c <- lm(f01c, data = main_data, weights = main_data$weight)
+
+main_data$infit01c <- is.element(rownames(main_data), names(fit01c$residuals))
+
+fit01u <- lm(f01u, data = main_data, subset = infit01c, weights = main_data$weight)
+
+z <- oster(fit01u, fit01c, "untrustworthy_flag_test")
+b13 <- oster(fit01u, fit01c, "untrustworthy_flag_test", rm = 1.3)$beta
+
+round(c(z$input$beta_o, z$input$beta_tilde, z$beta, b13, z$rmax), 6)
+```
+
+## Dosage
+
+```{r}
+f01c <- won_election_trump ~ untrustworthy_n_test + untrustworthy_flag_pre + total_n_pre + trump_support_pre + college + female + non_white + knowledge + interest + age4_under_30 + age4_30_44 + age4_45_64 + age4_65
+
+f01u <- won_election_trump ~ untrustworthy_n_test 
+
+fit01c <- lm(f01c, data = main_data, weights = main_data$weight)
+
+main_data$infit01c <- is.element(rownames(main_data), names(fit01c$residuals))
+
+fit01u <- lm(f01u, data = main_data, subset = infit01c, weights = main_data$weight)
+
+z <- oster(fit01u, fit01c, "untrustworthy_n_test")
+b13 <- oster(fit01u, fit01c, "untrustworthy_n_test", rm = 1.3)$beta
+
+round(c(z$input$beta_o, z$input$beta_tilde, z$beta, b13, z$rmax), 6)
+```
+
+
+```{r}
+temp <- robomit::o_beta_boot(y = "won_election_trump",
+                x = "untrustworthy_n_test",
+                con = "untrustworthy_flag_pre + total_n_pre + trump_support_pre + educ4_college_grad + educ4_hs_or_less + educ4_postgrad + educ4_some_college + female + race4_black + race4_hispanic + race4_other + race4_white + knowledge + interest + age4_30_44 + age4_45_64 + age4_65 + untrustworthy_flag_pre",
+                data = main_data,
+                R2max = 1.3*0.3798,
+                type = "lm",
+                w = "weight",
+                delta = 1,
+                sim = 1000,
+                obs = 1000,
+                rep = T)
+
+mean(temp$`beta*`)
+```
+
+```{r}
+temp <- robomit::o_beta_boot(y = "won_election_trump",
+                x = "untrustworthy_flag_test",
+                con = "untrustworthy_flag_pre + total_n_pre + trump_support_pre + educ4_college_grad + educ4_hs_or_less + educ4_postgrad + educ4_some_college + female + race4_black + race4_hispanic + race4_other + race4_white + knowledge + interest + age4_30_44 + age4_45_64 + age4_65",
+                data = main_data,
+                R2max = 1.3*0.3821,
+                type = "lm",
+                w = "weight",
+                delta = 1,
+                sim = 1000,
+                obs = 1000,
+                rep = T,
+                useed = 1)
+
+median(temp$`beta*`)
+```
+
+```{r}
+temp <- robomit::o_beta_boot(y = "won_election_trump",
+                x = "untrustworthy_n_test",
+                con = "untrustworthy_flag_pre + total_n_pre + trump_support_pre + educ4_college_grad + educ4_hs_or_less + educ4_postgrad + educ4_some_college + female + race4_black + race4_hispanic + race4_other + race4_white + knowledge + interest + age4_30_44 + age4_45_64 + age4_65",
+                data = main_data,
+                R2max = 1.3*0.3838,
+                type = "lm",
+                w = "weight",
+                delta = 1,
+                sim = 1000,
+                obs = 1000,
+                rep = T,
+                useed = 1)
+
+median(temp$`beta*`)
+```
+
+
+\newpage
+
+
+```{r}
+weights::wtd.t.test(x = main_data$untrustworthy_n_total,
+                    weight = main_data$weight)
+```
+
+```{r}
+weights::wtd.t.test(x = main_data %>% filter(untrustworthy_flag_total == 1) %>% pull(untrustworthy_n_total),
+                    weight = main_data %>% filter(untrustworthy_flag_total == 1) %>% pull(weight))
+```
+
+# Articles mentioning "election"
+
+```{r }
+set.seed(1)
+X_binary <- main_data[, c("untrustworthy_flag_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_under_30", "age4_30_44", "age4_45_64", "age4_65")]
+Y_binary <- main_data$won_election_trump
+W_binary <- main_data$election_untrustworthy_flag_test
+```
+
+```{r }
+tau.forest_binary <- causal_forest(X_binary, Y_binary, W_binary, num.trees = 4000)
+tau.hat_binary <- predict(tau.forest_binary, X_binary, estimate.variance = TRUE)
+sigma.hat_binary <- sqrt(tau.hat_binary$variance.estimates)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, target.sample = "overlap")
+```
+
+```{r }
+main_data_predictions_binary <- main_data %>% 
+  cbind(tau.hat_binary)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, subset = main_data$trump_support == 1, target.sample = "overlap")
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_binary, subset = main_data$trump_support == 0, target.sample = "overlap")
+```
+
+```{r include = T}
+test_calibration(tau.forest_binary)
+```
+Dosage
+
+```{r }
+set.seed(1)
+X_dosage <- main_data[, c("untrustworthy_flag_pre", "trump_support_pre", "educ4_college_grad", "educ4_hs_or_less", "educ4_postgrad", "educ4_some_college", "female", "race4_black", "race4_hispanic", "race4_other", "race4_white", "knowledge", "interest", "age4_under_30", "age4_30_44", "age4_45_64", "age4_65")]
+Y_dosage <- main_data$won_election_trump
+W_dosage <- main_data$election_untrustworthy_n_test
+```
+
+```{r }
+tau.forest_dosage <- causal_forest(X_dosage, Y_dosage, W_dosage, num.trees = 4000)
+tau.hat_dosage <- predict(tau.forest_dosage, X_dosage, estimate.variance = TRUE)
+sigma.hat_dosage <- sqrt(tau.hat_dosage$variance.estimates)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, target.sample = "overlap")
+```
+
+```{r }
+main_data_predictions_dosage <- main_data %>% 
+  cbind(tau.hat_dosage)
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, subset = main_data$trump_support == 1, target.sample = "overlap")
+```
+
+```{r include = T}
+average_treatment_effect(tau.forest_dosage, subset = main_data$trump_support == 0, target.sample = "overlap")
+```
+
+```{r include = T}
+test_calibration(tau.forest_dosage)
+```
+
+# References

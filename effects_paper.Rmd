@@ -1,0 +1,383 @@
+---
+title: "The Effect of Online Misinformation Exposure on False Election Beliefs"
+author: "Ross Dahlke & Jeff Hancock"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  pdf_document: default
+# always_allow_html: yes
+abstract: "Considering the threat misinformation poses to democratic functioning, little research has studied how misinformation can influence beliefs about elections. We examine the effect of online misinformation exposure on a core democratic belief: the validity of elections. We study this relationship through a two-wave survey of 1,194 American adults and over 21M observations of these individuals’ web-browsing activities before and after the 2020 US Presidential Election. After flexibly adjusting for observed differences and propensity for selective exposure using double machine learning, we find that people exposed to misinformation websites were 4.2% more likely to falsely believe that the election results were fraudulent. We find strong evidence, however, of motivated reasoning: the effect rises to 12.6% among conservatives, but for liberals we observe no effect. There was also a dosage effect. For each exposure to a misinformation website, there was a .03% increase in the likelihood of holding this false belief. We discuss the implications of these results in relation to broader concerns regarding the effect of misinformation on false beliefs related to democratic backsliding."
+bibliography: bibliography.bib
+csl: naturae.csl
+biblio-style: naturae
+code_folding: hide
+---
+
+```{r include = F}
+library(tidyverse)
+```
+
+
+# Introduction
+
+The amount of scholarship on digital misinformation has sharply risen in recent years, focusing on how misinformation spreads [e.g., @grinberg2019fake; @juul2021; @vosoughi2018] and how people are exposed [e.g., @allen2020; @guess2019less]. One crucial question that remains surprisingly understudied is how exposure to misinformation online affects downstream beliefs [@guess2020c]. For example, while recent research has revealed that millions of Americans were exposed to misinformation on the internet during the 2016 [e.g., @allen2020; @guess2020a] and 2020 [@moore2022] elections, it is unclear how these exposures influenced people’s beliefs about the election.
+
+Experimental work has manipulated misinformation exposure to assess its causal effects, producing mixed results. For example, one study found limited effects of exposure and concluded that misinformation likely does not play a significant role in beliefs about climate change [@drummond2020]. In contrast, a recent study found that a single exposure to a misinformation article can reduce factual accuracy in beliefs about the COVID-19 vaccine [@porter2021].  Observational studies that capture naturally-occurring exposures similarly point to significant but limited effects of misinformation. @green2022online examined misinformation exposure on Twitter. They found that people who engaged with conspiracy theories were likelier to vote, suggesting that, at least on Twitter, online exposure can have downstream effects on important political outcomes. @guess2020c found that people who consumed misinformation websites expressed more polarized feelings toward political parties, but the exposure was not associated with political participation. Importantly, @guess2020c found limited effects moderated by political identification. Considering the threat misinformation poses to democratic functioning, more research examining how misinformation can influence election beliefs is required. 
+
+Research to date has also failed to differentiate between two mechanisms that may drive misinformation’s effect on beliefs. The first is selective exposure, a behavioral dynamic in which people who already hold certain beliefs seek out congenial information to avoid dissonance [@freedman1965selective; @frey1986recent; @sears1967selective; @stroud2010polarization; @zillmann2013selective]. The second is motivated reasoning, a cognitive process in which congenial information strengthens predisposed beliefs [@epley2016mechanics; @kunda1990case] and is well-established in the study of the effects of political information [@bisgaard2015bias;  @bolsen2014influence; @druckman2019evidence; @kahan2015politically; @leeper2014political; @slothuus2010political].
+
+This distinction is important because although selective exposure can lead people to seek out and consume misinformation [@guess2020a; @guess2020b; @moore2022], it is less clear whether motivated reasoning influences belief change once an individual is exposed to misinformation. While prior work demonstrates that selective exposure predisposes an individual to seek out congenial misinformation (e.g., conservatives are more likely to visit conservative-oriented misinformation, and liberals are more likely to visit liberal-oriented misinformation), it is unclear what the effect of misinformation on beliefs is once a person is exposed to it. Given the outcome of the 2020 US Presidential election, in which the conservative candidate lost, a motivated reasoning account suggests that, after controlling for selective exposure, conservatives exposed to misinformation should be more likely to hold the false belief that the election was false than non-exposed conservatives. Such an account would also predict that liberals’ beliefs about the election would be unaffected by exposure to misinformation.
+
+In the present study, we first conduct an analysis that does not consider selective exposure to provide an estimate comparable to past studies. We then consider selective exposure via double machine learning to disentangle it from motivated reasoning. In an initial step, this method uses machine learning to first estimate an individual’s predisposition to consume misinformation from individual characteristics (e.g., demographics) and browsing behavior from a baseline period (see Fig. 1). In a second step, this consumption predisposition that controls for selective exposure is entered into a  second machine learning model that estimates the effect of online misinformation exposure on false beliefs about the election.
+
+Specifically, we collected information on every website participants visited for eleven weeks surrounding the election. We matched these observed website visits to known misinformation websites [@moore2022] to identify individuals’ exposure. We integrated this web-browsing behavior with demographic information and political beliefs collected via a two-wave survey, including a measure of the false belief that the election was fraudulent, assessed approximately one month after election day and three weeks after the result was declared. This belief that the election was fraudulent is especially important because of its potential to contribute to democratic backsliding or erosion–when democratic institutions, norms, or attitudes come under threat from state actors and individuals [@bermeo2016democratic; @carey2019searching]. 
+
+Our results suggest that, on average, exposure to misinformation websites during the months around the 2020 presidential election increased the false belief that the election was fraudulent by approximately 4%. This effect, however, was only observed among conservatives, which is consistent with motivated reasoning given that the conservative candidate lost the election. If exposed, the average conservative was about 13% more likely to believe the election was fraudulent than if they were not exposed. We find no such effect when comparing exposed and unexposed liberals. We also find a dosage effect, in which more exposures lead to increased false beliefs about the election outcome, for conservatives only. Thus, we show a troubling intersection of motivated reasoning and exposure to misinformation online that may undermine trust in electoral systems and that has important implications for democratic backsliding [@calvillo2021individual; @waldner2018unwelcome]. 
+
+# Findings
+
+We integrate survey data from 1,194 people and passively-collected web-browsing data from the participants, consisting of nearly 21 million website visits. These data were collected over two periods (see Fig. 1). The first baseline period of browsing data was collected from August 24, 2020, to September 18, 2020, with a survey to collect demographic information administered on September 18, 2020. We also collected a second period of browsing data from the same participants from September 19, 2020, to December 7, 2020. On December 7, 2020, four weeks after the US presidential election, we administered another survey and collected the participants’ beliefs about the validity of the election results. We identify misinformation website exposures in the browsing data by matching the domains the participants visited with a list of known misinformation sites [@moore2022]. We also conducted a supplemental analysis where we only examined misinformation website visits that refer specifically to the election, finding similar results (see Supporting Information E). 
+
+\begin{figure}[t]
+  \includegraphics{./tables_and_figures/fig_1.png}
+  \caption{Timeline of data collection. The first wave of web-browsing data was collected from August 24, 2020, to September 18, 2020. We administered a survey on September 18, 2020, to collect demographic information and political support. The second wave of web-browsing data was collected from September 19, 2020, to December 7, 2020. Then, we conducted a second survey on December 7, 2020, and asked participants about their beliefs on whether the 2020 US Presidential election was fraudulent.}
+\end{figure}
+
+We first conduct a regression decomposition analysis to be able to compare to other observational work on the effects of misinformation [e.g., @green2022online; @guess2020c]. Our decomposition sequentially accounts for the role of covariates, including demographics collected in the first survey and browsing behaviors in the baseline period of browsing data, specifically, the number of websites visited and misinformation website consumption during this first period. This methodological approach, however, assumes that exposure to misinformation is random across individuals, and thus selective exposure is not considered. Therefore, we next use double machine learning to flexibly adjust for individual characteristics, including demographics and each person’s propensity for selective exposure.
+
+\begin{figure}[t]
+  \includegraphics{./tables_and_figures/cate_graph_2.png}
+  \caption{Timeline of data collection. The first wave of web-browsing data was collected from August 24, 2020, to September 18, 2020. We administered a survey on September 18, 2020, to collect demographic information and political support. The second wave of web-browsing data was collected from September 19, 2020, to December 7, 2020. Then, we conducted a second survey on December 7, 2020, and asked participants about their beliefs on whether the 2020 US Presidential election was fraudulent.}
+\end{figure}
+
+## Exposure Effects
+
+Descriptively, we find that people exposed to misinformation were more likely to believe that the results of the 2020 presidential election were fraudulent than those who were not. Those exposed were 17.3% (95% CI = 12.7, 21.9) more likely to believe that the election was fraudulent. We decompose the 17.3% effect using a Gelbach Decomposition into two components: the part of the effect that can be explained by observed individual characteristics, such as demographics and presidential candidate support, and the unexplained portion, which may represent the motivated reasoning effect of exposure on election beliefs. The results of the Gelbach Decomposition (Table 1) reveal that 65.7% of this effect between those exposed and not exposed to false election beliefs can be explained by observed characteristics. Therefore, 34.2% of the difference remains unexplained and may, in part, represent the effect of misinformation exposure on false election beliefs.
+
+
+```{r include = F}
+load("tables_and_figures/binary_model1")
+load("tables_and_figures/binary_model2")
+load("tables_and_figures/binary_model3")
+load("tables_and_figures/binary_model4")
+load("tables_and_figures/binary_model5")
+load("tables_and_figures/binary_model6")
+load("tables_and_figures/binary_model7")
+load("tables_and_figures/binary_model8")
+load("tables_and_figures/binary_model9")
+load("tables_and_figures/binary_model10")
+```
+
+```{r, echo = F,  results = 'asis', fig.pos = 't'}
+stargazer::stargazer(binary_model1, binary_model2, binary_model3, binary_model4, binary_model5, binary_model6, binary_model7, binary_model8, binary_model9, binary_model10, 
+                     title = "OLS regression of the difference in belief of Trump winning the election, consecutively adding more covariates",
+                     type = "latex",
+                     omit = c("total_n_pre", "trump_support_pre", "college", "female", "non_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65", "untrustworthy_flag_pre", "educ4_hs_or_less", "educ4_postgrad", "race4_black", "race4_hispanic", "race4_other", "race4_white"),
+                     df = F,
+                     add.lines = list(c("Conservative", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Total Web Visits Wave 1", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Education", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Gender", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Race", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Political Knowledge", "No", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Political Interest", "No", "No", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes"),
+                                      c("Age", "No", "No", "No", "No", "No", "No", "No", "No", "Yes", "Yes"),
+                                      c("Misinfo Exposure Wave 1", "No", "No", "No", "No", "No", "No", "No", "No", "No", "Yes")),
+                     star.cutoffs = c(0.05, 0.01, 0.001),
+                     covariate.labels = c("Misinfo Exposures"),
+                     dep.var.labels = c("Belief that Trump won the 2020 U.S. Presidential Election"),
+                                     notes.append = F,
+                     notes = c("Gelbach Decomposition of the effect of misinformation website exposure on the belief that Donald", 
+                               "Trump won the 2020 U.S. Presidential Election. Independent variables are sequentially added ", 
+                               "to the baseline model to the final model. This decomposition reveals that about 70 percent of",
+                               "the difference in the belief that Trump won the election between those who were exposed to", 
+                               "misinformation websites and those who were not can be explained by observed differences.", 
+                               "About 30 percent of difference remains unexplained and may partially be due to the effect of", 
+                               "misinformation website exposure.", 
+                               "Significance level: * p$<$0.05, ** p$<$0.01, *** p$<$0.001."),
+                     notes.align = "l",
+                                          header=FALSE, # to get rid of r package output text
+                     single.row = F, # to put coefficients and standard errors on same line
+                     no.space = TRUE, # to remove the spaces after each line of coefficient
+                     column.sep.width = "-12pt", # to reduce column width
+                     font.size = "small", # to make font size smaller))
+                     table.placement = 't'
+)
+```
+
+
+While useful to provide an upper bound on the effect of misinformation on beliefs, the Gelbach decomposition does not account for selective exposure or an individual’s likelihood of consuming misinformation. In order to interpret the results as causal, the likelihood of being exposed to misinformation is assumed to be random, something past research has shown to be false [@guess2019less; @guess2020a; @moore2022]. To account for selective exposure, we conduct a Causal Forest analysis [@wager2018]. While this method comes with its own assumptions, it considers misinformation exposure likelihood for each individual based on their observed characteristics (e.g., age, gender, education, political affiliation, period 1 web-browsing behaviors) in calculating its estimated effects. 
+
+Using the Causal Forest framework, we estimate the average effect size of misinformation exposure on false election beliefs to have an average effect of 4.2% (95% CI = .3, 8.0)^[This result is robust to a calibration test (p = < .05). See Supporting Information B for more details.] between individuals exposed to misinformation websites versus those who were not.^[As a robustness check, we also calculate this average effect using an alternative double machine learning method outlined by @chernozhukov2018. Using this alternative method, we find that the results remain significant, with an average effect of 5.7% (95% CI = 1.4, 10.1).] These effects, however, are highly heterogeneous across political support, with an estimated binary conditional average treatment of 12.6% (95% CI = 1.7, 23.5) for conservatives and –.17% (95% CI = -1.9, 1.6) for liberals (see Fig. 2), meaning that conservatives were much more susceptible to the effects of misinformation on beliefs about the election’s validity.
+
+Overall, we find that exposure to misinformation significantly increased the false belief that the election was fraudulent among participants in our study, but only when that false belief was consistent with their preferences (i.e., motivated reasoning). Another question is whether misinformation exposure has a dosage effect. That is, what is the marginal effect of each exposure to a misinformation website on false election beliefs?
+
+## Dosage Effects
+
+To examine the dosage effects, we repeated the analysis above, with the independent variable being the number of misinformation website exposures. These results effectively calculate the marginal effect of misinformation exposures. For every additional exposure, the increase in false election beliefs was .08% (see Table 2). Using the Gelbach Decomposition, we find that observable differences (e.g., presidential support, demographis) can explain 52.% of this dosage increase. 
+
+```{r include = F}
+load("tables_and_figures/dosage_model1")
+load("tables_and_figures/dosage_model2")
+load("tables_and_figures/dosage_model3")
+load("tables_and_figures/dosage_model4")
+load("tables_and_figures/dosage_model5")
+load("tables_and_figures/dosage_model6")
+load("tables_and_figures/dosage_model7")
+load("tables_and_figures/dosage_model8")
+load("tables_and_figures/dosage_model9")
+load("tables_and_figures/dosage_model10")
+```
+
+```{r, echo = F,  results = 'asis'}
+stargazer::stargazer(dosage_model1, dosage_model2, dosage_model3, dosage_model4, dosage_model5, dosage_model6, dosage_model7, dosage_model8, dosage_model9, dosage_model10, 
+                     title = "OLS regression of the difference in belief of Trump winning the election, consecutively adding more covariates",
+                     type = "latex",
+                     omit = c("total_n_pre", "trump_support_pre", "college", "female", "non_white", "knowledge", "interest", "age4_30_44", "age4_45_64", "age4_65", "untrustworthy_flag_pre", "educ4_hs_or_less", "educ4_postgrad", "race4_black", "race4_hispanic", "race4_other", "race4_white"),
+                     df = F,
+                     add.lines = list(c("Conservative", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Total Web Visits Wave 1", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Education", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Gender", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Race", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Political Knowledge", "No", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes", "Yes"),
+                                      c("Political Interest", "No", "No", "No", "No", "No", "No", "No", "Yes", "Yes", "Yes"),
+                                      c("Age", "No", "No", "No", "No", "No", "No", "No", "No", "Yes", "Yes"),
+                                      c("Misinfo Exposure Wave 1", "No", "No", "No", "No", "No", "No", "No", "No", "No", "Yes")),
+                     star.cutoffs = c(0.05, 0.01, 0.001),
+                     covariate.labels = c("Misinfo Exposures"),
+                     dep.var.labels = c("Belief that Trump won the 2020 U.S. Presidential Election"),
+                                     notes.append = F,
+                     notes = c("Gelbach Decomposition of the effect of misinformation website exposure on the belief that Donald", 
+                               "Trump won the 2020 U.S. Presidential Election. Independent variables are sequentially added ", 
+                               "to the baseline model to the final model. This decomposition reveals that about 50 percent of",
+                               "the difference in the belief that Trump won the election between those who were exposed to", 
+                               "misinformation websites and those who were not can be explained by observed differences.", 
+                               "About 50 percent of difference remains unexplained and may partially be due to the effect of", 
+                               "misinformation website exposure.", 
+                               "Significance level: * p$<$0.05, ** p$<$0.01, *** p$<$0.001."),
+                     notes.align = "l",
+                                          header=FALSE, # to get rid of r package output text
+                     single.row = F, # to put coefficients and standard errors on same line
+                     no.space = TRUE, # to remove the spaces after each line of coefficient
+                     column.sep.width = "-12pt", # to reduce column width
+                     font.size = "small", # to make font size smaller))
+                     table.placement = 't'
+)
+```
+
+Using the Causal Forest analysis, we find an average estimated dosage effect of .034% (95% CI = .018, .049)^[This result is robust to a calibration test (p = < .05). See Supporting Information B for more details.], suggesting that for each additional exposure to a misinformation website, the likelihood of falsely believing the election was fraudulent increased by .03%.^[As a robustness check, we also calculate this average difference using the method outlined by @chernozhukov2018, finding that the results remain significant, with an average difference of .035% (95% CI = .023, .048) for each additional exposure.] Finally, we also observe heterogeneity in the dosage effect. The dosage effect for conservatives was .035% (95% CI = .017, .054) and for liberals, .010% (95% CI = -.020, .041). See Supporting Information D for more discussion of the dosage effect.
+
+# Discussion
+
+Our findings suggest that concerns about misinformation online creating false beliefs that can undermine democratic institutions are justified. Analyzing real-world exposure to misinformation websites, we find that misinformation exposure significantly predicts an increase in the false belief that an American Presidential election was fraudulent. Our use of actual behavior is important not only because misinformation encountered in people’s everyday behavior is more difficult to correct than misinformation artificially shown to people in experimental settings [@brashier2021; @ecker2022; @susmann2022a; @susmann2022b; @walter2018; @walter2020; @wittenberg2020] but also because we are able to take a holistic view of people’s actual misinformation exposures, not just misinformation shown to people in experimental settings. By asking this question one month after election day and three weeks after the election was declared, we are more likely to collect firmly-held beliefs, not just uncertainty in the results (e.g., a close election not yet being called). In addition, past research found that this belief is firmly held and not a reflection of partisan support [@fahey2022big] 
+
+We make three main contributions. First, we disentangle two potential mechanisms by which misinformation can contribute to beliefs that are harmful to democracy. Since selective exposure to misinformation is well-documented [e.g., @guess2020a; @moore2022], it is difficult to move beyond selective exposure to ascertain the effect of real-world misinformation exposure on beliefs [@guess2020c]. By applying double machine learning to our dataset of tens of millions of web browsing visits, we control for the impact of selective exposure and find that misinformation plays a significant role in falsely believing that the election was fraudulent. This finding is particularly important because it illuminates the process by which people come to hold beliefs that are deleterious to democracy. It is not only that political circumstances can convince people to hold beliefs that are a fundamental challenge to democracy and then seek out supporting information. It is also the case that misinformation itself can lead to the erosion of democratic beliefs. 
+
+Second, the asymmetric nature of our findings uncovers that motivated reasoning plays a predominant role in misinformation actually affecting people’s beliefs. We find that conservatives were affected by misinformation exposure while liberals were not. This observation is consistent with motivated reasoning, in which information consistent with people’s preferences is more likely to be believed [@nickerson1998]. While some past work has examined heterogeneity in exposure to [e.g., @bisbee2022election; @grinberg2019fake; @guess2020a; @moore2022] and sharing of [e.g., @nikolov2020] misinformation, we provide an initial look at the heterogeneity in misinformation’s effects on beliefs. In doing so, we extend the theoretical implications of selective exposure to motivated reasoning and add insight into the possible mechanisms by which conservatives may be more susceptible to political misperceptions (@garrett2021conservatives; @guess2020c) and conspiracy beliefs [@enders2019informational]. 
+
+Our finding of motivated reasoning shows that exposure to misinformation does not automatically change people’s beliefs. In other words, misinformation is not a hypodermic needle whereby exposure to misinformation axiomatically alters beliefs. If misinformation were a hypodermic needle, measuring exposure levels and diffusion patterns would capture how misinformation impacts society. Media scholars have long discredited the hypodermic needle theory [@gerbner1983importance; @lazarsfeld1944election; @lazarsfeld1968people], including in the data-driven modern media landscape [@anderson2021fake; @baldwin2020data], and misinformation researchers should be cautious not to implicitly apply it to studying misinformation. Instead, we show that to understand the impact of misinformation on the world, and specifically on democratic backsliding, we must understand for whom misinformation is altering beliefs. Understanding more specifically the types of misinformation that is impacting specific people can help academic and practitioners create digital interventions that are more likely to succeed in curbing the influence of misinformation. 
+
+Third, the number of misinformation exposures plays a role in false beliefs. Past scholars have speculated that repeated exposure to misinformation influences beliefs [@lazer2020] and have called for more research into this specific question [@van2022]. We answer this call and provide evidence that repeated misinformation exposures across multiple months can foster false belief formation in a real-world setting. Simply put, the more one is exposed to these misinformation websites, the more likely they are to believe in a fraudulent election. Of course, our data suggest that this dosage effect only occurs when an individual is susceptible to confirmation bias (e.g., their candidate has lost). 
+
+This study suffers from several important limitations. First, the precision of our estimates could be improved. For instance, the Gelbach decomposition provides an upper bound on the relationship between misinformation and false beliefs, and our Causal Forest estimates have large standard errors. More precise estimates of misinformation effects are needed to help inform private and public policy. Future studies should provide more precise estimates of the relationship between misinformation exposure and political beliefs. Future studies also should strive for larger population samples and more comprehensive observational data, such as integrating television and other forms of consumption [e.g., @allen2020; @muise2022; @watts2021]. Furthermore, our estimated dosage effects only consider a linear relationship between additional exposures and the false belief in a fraudulent election. Additional research could examine whether there is a diminishing or otherwise non-linear relationship between repeated exposures and beliefs. Finally, we analyze the effects on only one election and future research is required to generalize the findings across elections. According to our motivated reasoning account, for example, the results would be reversed for electoral outcomes where a conservative candidate won, such as the 2016 presidential election, and misinformation exposure should be more impactful among liberals under that circumstance. 
+
+Another limitation of our study is that the Causal Forest method assumes unconfoundedness. It is unlikely that our data is unconfounded in this way because of the limitations of data capture, such as broader media consumption or conversations with friends and family. While an omitted variable bias tes (see Supporting Information C) provides some reassurance about the robustness of omitted variables, it does not entirely eliminate the concern. A randomized field experiment could address these concerns. Practically and ethically, it would be problematic to experimentally expose people to misinformation at the levels we observed in our browsing data: the average number of exposures among the entire sample was 30.8 (95% CI = 20.4, 41.2); among those exposed, the average number was 67.7 (95% CI = 46.0, 89.3). 
+
+# Conclusion
+
+Considering that over 68 million American adults were estimated to have been exposed to misinformation websites in the weeks around the 2020 U.S. election [@moore2022], a misinformation exposure effect of 4% would imply that approximately 2,720,000 more people falsely believed that the 2020 U.S. Presidential Election was fraudulent because of misinformation websites. To put this number in context, only 10,000 to 80,000 people attended the January 6, 2021, protests [@zou2022] that attempted to block the certification of Joe Biden as president, and only 2,000-2,500 people physically entered the U.S. Capitol building [@lucas2022]. While it is difficult to draw a line between exposure to misinformation and insurrection, our data provide initial evidence that exposure to misinformation can influence beliefs that undermine the functioning of democracy.
+
+# Methods
+
+We collected data from 1,194 participants recruited by the survey firm YouGov. These participants completed Survey 1 on September 18, 2020, seven weeks before the U.S. Presidential Election, and Survey 2 on December 7, 2020, four weeks after the presidential election. We also gathered two waves of web-browsing data from the participants using YouGov’s Pulse web-tracking software. The first wave of browsing data was collected from August 24, 2020, to September 18, 2020, and the second wave of web-browsing data was collected from September 19, 2020, to December 7, 2020. We experience small levels of dropout. We collected web browsing data in the second wave from 1,194 participants of the original participants. All participants consented to the surveys and installing the web-tracking software, and YouGov compensated the participants for their participation. YouGov weighted these individuals to match a nationally-representative population, and we used these weights in the regressions.
+
+The main independent variables of interest are misinformation website exposure and the number of misinformation website exposures in Wave 2 of the web-browsing data. To identify which websites our participants visited that were misinformation websites, we used a list of 1,796 misinformation domains from @moore2022. 
+
+The primary dependent variable is the belief that the 2020 U.S. Presidential election, which was asked on December 7 in Survey 2. We asked, “In your view, who won the presidential election held in November?” In our survey, 19.7% (95% CI = 17.4, 22.0) of people said they believed Donald Trump was the rightful winner, including 47.0% (95% CI = 42.3, 51.8) of Trump supporters.
+
+We use a variety of variables as the observable variables in our analyses. These variables included being a conservative (Trump supporter), education level, gender, race, political knowledge, political interest, and age. We also control for digital behaviors of exposure to misinformation websites in Wave 1 and the total number of websites visited. Then, exposure to a misinformation website during Wave 2 of the web-browsing data is our independent variable of interest.
+
+One challenge in causal inference with observational longitudinal data is unobservable factors that could confound the treatment (exposure to misinformation websites) and outcome (election beliefs). To address this challenge, we employ a Gelbach Decomposition [@gelbach2016]. This method decomposes the difference in the dependent variable (election beliefs) across the independent variable of interest (whether someone was exposed to misinformation websites or not) into a component that observed variables can explain (e.g., demographics) and a component that remains unexplained and may represent the genuine effect (exposure’s effect on election beliefs). In the present study, we use a Gelbach Decomposition to decompose the difference in the belief that the election was fraudulent between individuals exposed to misinformation websites versus those not exposed (Supporting Material A contains additional details).
+
+Another challenge in causal inference analysis is omitted variable bias, in which variables that cannot be recorded, such as political conversations with friends and family or other misinformation consumption that we do not capture in our data, could account for some of the effects. To ensure the robustness of our findings, we conducted an omitted variable bias test, as suggested by (24).
+
+Finally, we used a Causal Forest analysis to estimate the average size of the effect [@wager2018]. Causal Forest analysis is a doubly-robust nonparametric machine learning method. It flexibly adjusts for observed differences to estimate the average difference between people exposed to misinformation websites and those who were not. This method is preferential to a simple OLS regression because it non-parametrically considers the propensity to be treated (exposed to misinformation) based on the known variables of each individual. These propensities are then considered when calculating the average treatment effect. Additionally, this method allows us to examine heterogeneity in the results.
+
+
+\newpage
+
+\setcounter{table}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{figure}{0} 
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+# Supporting information for: **Misinformation Exposure and the False Belief that Trump Won the 2020 U.S. Presidential Election**
+
+## A. Gelbach Decomposition
+
+The Gelbach (2016) Decomposition is estimated by sequentially fitting OLS regression models. First, we fit a base model where we are predicting the dependent variable of interest (the false belief that Trump won the 2020 U.S. Presidential election) with the only independent variable being your main predictor of interest (exposure to misinformation). The equation for this model is $$FalseBelief_{i} = \beta_{0} + \beta_{ExposedMisinfoi} + \epsilon$$. In our data, we estimate that $$\hat{\beta}^{base}_{ExposedMisinfo} = .163$$. 
+
+Then, we sequentially add additional predictor variables that are potential predictors of belief in Trump being the rightful winner of the election. Eventually, we fit a full model of $$FalseBelief_{i} = \beta_{0} + \beta_{ExposedMisinfoi} + \beta_{2}X_{i} + \epsilon$$, where $$X_{i} = \begin{bmatrix}
+Conservative_{i}\\
+PoliticalKnowledge_{i}\\
+PoliticalInterest_{i}\\
+Female_{i}\\
+EduHSorLess_{i}\\
+EduSomeCollege_{i}\\
+EduCollegeGrad_{i}\\
+EduPostGrad_{i}\\
+RaceBlack_{i}\\
+RaceHispanic_{i}\\
+RaceWhite_{i}\\
+RaceOther_{i}\\
+AgeUnder30_{i}\\
+Age30to44_{i}\\
+Age45to65_{i}\\
+Age65plus_{i}\\
+MisinfoExposureWave1_{i}\\
+WebVisitsWave1_{i}
+\end{bmatrix}$$. In this full model, $\hat{\beta}^{full}_{ExposedMisinfo} = .051$.
+
+As a result, we decompose $\hat{\beta}^{base}_{ExposedMisinfo} = .163$
+into the two components, the ~70% that can be explained by observable variables ($\hat{\beta}^{base}_{ExposedMisinfo} - \hat{\beta}^{full}_{ExposedMisinfo}$) and the component that cannot be explained ($\hat{\beta}^{full}_{ExposedMisinfo}$). The full outputs of the final full models for binary exposure and dosage are in Table S1. 
+
+The following control variables are used throughout the analyses. “Conservative” variable: intending to vote for Trump in 2020 election = 1; not intending to vote for Trump in 2020 election = 0. “PoliticalKnowledge” variable: variable ranging from 0-4 representing the number of questions in Pew Research Center’s civic knowledge questionnaire answered correctly out of 4. “PoliticalInterest” variable: variable ranging from 1-4 where 4 = people who say they pay attention to what’s going on in government and politics “most of the time” and 1 = those who pay attention “hardly at all”. “Female” variable: 1 = indicated identifying as a female, 0 = did not indicate identifying as a female.“EduHSorLess” variable: 1 = high school is the highest level of education attained; 0 = high school is not the highest level of education attained. "EduSomeCollege" variable: 1 = some college is the highest level of education attained; 0 = some college is not the highest level of education attained. "EduCollegeGrad" variable: 1 = graduated college and is the highest level of education attained; 0 = graduated college is not the highest level of education attained. "EduPostGrad" variable: 1 = post-graduate degree is highest level of education attained; 0 = post-graduate degree is not the highest level of education attained. "RaceBlack" variable: 1 = indicated identifying as Black; 0 = did not indicate as identifying as Black. "RaceHispanic" variable: 1 = indicated identifying as Hispanic; 0 = did not indicate identifying as Hispanic. "RaceWhite" variable: 1 = indicated identifying as White; 0 = did not indicate identifying as White. "RaceOther" variable: 1 = indicated as identifying as a race other than Black, Hispanic, or White; 0 = did not indicate as identifying as a race other than Black, Hispanic, or White. "AgeUnder30" variable: 1 = indicated age under 30 years old; 0 = indicated age not under 30 years old. "Age30to44" variable: 1 = indicated age between 30 and 44 years old; 0 = indicated age not between 30 and 44 years old. "Age45-65" variable: 1 = indicated age between 45 and 65 years old; 0 = indicated age not between 45 and 65 years old. "Age65plus" variable: 1 = indicated age over 65 years old; 0 = indicated age not over 65 years old. "MisinfoExposureWave1": 1 = exposed to at least one misinformation website in the Wave 1 browsing data; 0 = not exposed to at least one misinformation website in the Wave 1 browsing data. "WebVisitsWave1": Number of websites visited in the Wave 1 web-browsing data. 
+
+```{r, echo = F, results = 'asis'}
+stargazer::stargazer(binary_model10, dosage_model10,
+                     title = "OLS regression of the difference in belief of Trump winning the election, consecutively adding more covariates",
+                     type = "latex",
+                     star.cutoffs = c(0.05, 0.01, 0.001),
+                     notes = c("OLS regression coefficients for full models are shown with standard errors", 
+                               "in parentheses (models estimated using survey weights). Model 1 includes", 
+                               "binary exposure to misinformation websites during Wave 1. Model 2", 
+                               "includes the dosage of exposure to these websites. The dependent variable",
+                               "in both models is a binary variable indicating whether an individual said", 
+                               "that they beleived that Donald Trump was the winner of the 2020 U.S.", 
+                               "Presidential Election. P-values are two-sided."),
+                     dep.var.labels = c("Belief that Trump won the 2020 U.S. Presidential Election"),
+                     covariate.labels = c("Misinfo Exposure",
+                                          "Misinfo Exposure (dosage)",
+                                          "WebVisitsWave1",
+                                          "Conservative",
+                                          "EduCollegeGrad",
+                                          "EduHSorLess", 
+                                          "EduPostGrad", 
+                                          "EduSomeCollege",
+                                          "Female",
+                                          "RaceBlack", 
+                                          "RaceHispanic",
+                                          "RaceOther",
+                                          "RaceWhite",
+                                          "PoliticalKnowledge",
+                                          "PoliticalInterest",
+                                          "Age 30-44",
+                                          "Age 45-64",
+                                          "Age 65+",
+                                          "Misinfo Exposure Wave 1"),
+                     notes.align = "l",
+                     header=FALSE,
+                     single.row = T, # to put coefficients and standard errors on same line
+                     no.space = T, # to remove the spaces after each line of coefficient
+                     column.sep.width = "-12pt" # to reduce column width)
+)
+```
+
+
+
+\newpage
+
+## B. Causal Forest
+
+Causal Forests [@wager2018], like other double machine learning methods essentially use two main steps to estimate treatment effects under an expected outcomes framework. First, for binary exposure, the methodology uses observed variables $X$ for each individual and $W$, whether that individual received the treatment, to estimate the propensity of receiving the treatment, $\hat{W}$. In our case $$X_{i} = \begin{bmatrix}
+Conservative_{i}\\
+PoliticalKnowledge_{i}\\
+PoliticalInterest_{i}\\
+Female_{i}\\
+EduHSorLess_{i}\\
+EduSomeCollege{i}\\
+EduCollegeGrad{i}\\
+EduPostGrad{i}\\
+RaceBlack_{i}\\
+RaceHispanic_{i}\\
+RaceWhite_{i}\\
+RaceOther_{i}\\
+AgeUnder30_{i}\\
+Age30to44_{i}\\
+Age45to65_{i}\\
+Age65plus_{i}\\
+MisinfoExposureWave1_{i}\\
+WebVisitsWave1_{i}
+\end{bmatrix}$$  
+
+and 
+
+$$W_{i} = ExposedMisinfo_{i}$$
+. Then the observed variables $X$ are considered along with $\hat{W}$. Given the large number of estimated propensities near 0 (these individuals are very unlikely to have received the treatment) or 1 (these individual are very likely to have received the treatment) (see Fig. S1), we use the method suggested by @li2018 to estimate the treatment effect, $\tau(x)$. More formally, this all comes together as
+$$ \tau(x) = E[e(X)(1 - e(X))(Y^{(1)}-Y^{(0)}) / E[e(X)(1 - e(X)), where \ e(x) = P[W_{i} = 1 | X_{i} = x]$$
+. The methodology for dosage is essentially the same but instead of predicted propensity to receive treatment, the method predicts dosage. For more details see @wager2018 and @li2018. 
+
+The Causal Forests were implemented using the `grf` R package [v2.1.0 @grf]. The calibration test is a done as "best linear fit using forest predictions (on held-out data) as well as the mean forest prediction as regressors, along with one-sided heteroskedasticity-robust (HC3) SEs" [v2.1.0 @grf], implemented directly in `grf`.  
+
+![Note: Distribution of propensities for binary exposure and estimated number of misinformation websites an individual was exposed to. On the x-axis is this estimated number. In the top panel, the x-axis is the estimated propensity to be treated, the likelihood of being exposed to a misinformation article. In the bottom panel, the x-axis is expected number of misinformation websites each individual is exposed to. The y-axis for both panels is the count of people. The black bars represent people who were actually treated, exposed to at least one misinformation websites. The grey bars are people who were not exposed.](./tables_and_figures/w_hat_distributions.pdf)
+
+
+\newpage
+
+## C. Omitted Variable Bias Test
+
+We test for omitted variable bias test using the method and robustness cutoff suggested by @oster2019, as implemented by the `robomit` R package [v1.0.6 @robomit]. Specifically, we conduct bootstraps with replacement for 1,000 simulations with 1,000 draws each. The $R_{max}$ value we use is the suggest $R^{2}$ of the full controlled model multiplied by 1.3, as suggested by @oster2019. The bias-adjusted coefficients are in table S2. 
+
+```{r echo = F}
+tribble(
+  ~Model, 
+  ~"$\\hat{\\beta}^{base}_{ExposedMisinfo}$", 
+  ~"$\\hat{\\beta}^{full}_{ExposedMisinfo}$", 
+  ~"$\\hat{\\beta}^{bias-adjusted}_{ExposedMisinfo}$", 
+  "Binary exposure", 0.173302, 0.057813, 0.000965,
+  "Dosage", 0.000809, 0.000381, 0.000239
+) %>% 
+  knitr::kable("latex", booktabs = T,
+               col.names = kableExtra::linebreak(c("Model", "$\\hat{\\beta}^{base}_{ExposedMisinfo}$", "$\\hat{\\beta}^{full}_{ExposedMisinfo}$", "$\\hat{\\beta}^{bias-adjusted}_{ExposedMisinfo}$")), 
+               escape = F) %>% 
+  kableExtra::kable_styling(latex_options = "hold_position") %>% 
+  kableExtra::add_footnote("Table S3 Note: Omitted variable bias test as found in Oster (2019). The Model column distinguishes between the binary exposure and dosage models. The $\\hat{\\beta}^{full}_{ExposedMisinfo}$ column is the coefficient in the base model from the Gelbach decompositions, and $\\hat{\\beta}^{bias-adjusted}_{ExposedMisinfo}$ is the full model from the decompositions (see Table 1 and 2). The $\\hat{\\beta}^{bias-adjusted}_{ExposedMisinfo}$ is the bias-adjusted coefficient using the method suggested by Oster (2019). Importantly, these values remain positive, suggesting that the results are robust to omitted variable bias. Oster (2019) finds that only 45 percent of nonrandomized results in top Economics journals survive this test.",
+           escape = F,
+           threeparttable = TRUE)
+```
+
+\newpage
+
+# D. Dosage Effect & Interindividual Diminishing Effects
+
+While the present research cannot speak to the intraindividual diminishing effects (i.e., diminishing effects of repeated exposures among individuals), we can examine interindividual diminishing effects (i.e., compare each person’s estimated conditional dosage effect to their number of misinformation website exposures). We find no significant relationship between the number of misinformation articles one is exposed to and their conditional average dosage treatment effect (see Table S2).
+
+![Plot of the number of each person's misinformation exposures and their estimated conditional average effect. Each point is a person. The x-axis is the number of misinformation website visits each person visited (axis is on a log scale). The y-axis is the conditional average dosage effect for each person. ](./tables_and_figures/dosage_graph.pdf)
+
+
+```{r, echo = F,  results = 'asis'}
+
+load("tables_and_figures/diminishing_effects_model1")
+load("tables_and_figures/diminishing_effects_model2")
+  
+stargazer::stargazer(diminishing_effects_model1, diminishing_effects_model2, header = FALSE, type = "latex", dep.var.labels.include = F, dep.var.caption = "Conditional Average Dosage Effect", model.numbers = F, star.char = c("*", "**", "***"), star.cutoffs = c(0.05, 0.01, 0.001), covariate.labels = c("MisinfoExposureN", "log(MisinfoExposureN)", "Conservative", "MisinfoExposureN * Conservative", "log(MisinfoExposureN) * Conservative"))
+```
+
+\newpage
+
+# E. Election-Related Misinformation Articles
+
+We conducted a supplemental analysis in which we repeat the same analysis but examine only articles that mention the election. To do so, we scraped all of the misinformation articles visited in our data set using a headless Google Chrome browser. Then, we filtered down to the articles that contained the word "election." Finally, we repeated the main analyses from the paper but only counted these articles that mentioned the election.
+
+We calculate a similar point estimate using these election articles as the main analysis, but due to these visits being more sparse, we also calculate a larger standard error. For the treatment effect, we estimate a 3.4% (95% CI = -3.1, 10.0) average increase. For conservatives, this number is 7.0 (95% CI = -5.9, 19.7), for liberals, the number is -.3% (95% CI = -2.4, 1.8). For the dosage effect, we find an average effect of .09% (95% CI = .05, .14) per exposure. 
+  
+\newpage
+
+## F. Computing information
+
+We conducted our analyses using the R statistical software [v4.1.2 @rcore] in the Rstudio [v2022.2.3.492 @rstudio]. We made great use of the `tidyverse` [v1.3.1 @tidyverse] family of packages, in particular `ggplot2` [v3.3.5 @ggplot] for creating the graphs. The R packages `knitr` [v1.37 @knitr] and `kableExtra` [v1.3.4 @kableExtra] were used for creating tables. 
+
+\newpage
+
+
+# References
